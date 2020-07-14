@@ -1,0 +1,13 @@
+name = "NetABM"
+uuid = "3be70668-c620-11ea-1178-3d108346673d"
+authors = ["Ollin <ollin.langle@ciencias.unam.mx>"]
+version = "0.1.0"
+
+[deps]
+DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
+Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
+GraphIO = "aa1b3936-2fda-51b9-ab35-c553d3a640a2"
+LightGraphs = "093fc24a-ae57-5d10-9952-331d41423f4d"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
