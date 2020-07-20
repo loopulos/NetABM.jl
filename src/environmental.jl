@@ -1,45 +1,4 @@
 """
-    get_neigh(id, adj_mat, rows)
-Get contacts `id` from adjacency matrix
-`adj_mat::SparseArray ` -> Adjacency Matrix
-`rows::Array{Int,1}` -> `SparseArray` rows with non-zero values
-`agent_id::Int64` -> Agent `id` to find its contacts
-"""
-function get_neigh(agent_id, adj_mat, rows)
-    contacts = Int[]
-    for j in nzrange(adj_mat, agent_id)
-        push!(contacts, rows[j])
-    end
-    return contacts
-end
-
-##=================####==============##
-
-"""
-    initialize_erdos_renyi(params)
-Generate adjacency matrix for a random (undirected) Erdos-Renyi graph
-with `params.num_agents` nodes and `params.p_link` edge probability
-Returns:
-`adj_mat::SparseArray ` -> Adjacency Matrix
-`rows::Array{Int,1}` -> `SparseArray` rows with non-zero values
-"""
-function initialize_erdos_renyi(params)
-    adj_mat = spzeros(Int8, params.num_agents, params.num_agents)
-
-    for i in 1:params.num_agents, j in i+1:params.num_agents
-        if rand() < params.p_link
-            adj_mat[i,j] = 1
-            adj_mat[j,i] = 1
-        end
-    end
-
-    rows = rowvals(adj_mat)
-    return adj_mat, rows
-end
-
-##=================####==============##
-
-"""
     lectura_uw(red)
 Creates a LightGraph's SimpleGraph object from an adjacency list array. Returns the SimpleGraph and the ordered node sequence,
 this way node names can be strings.
@@ -76,7 +35,7 @@ Generates a LFR network
 - `maxc::Int`: Maximum for the community sizes.
 ...
 """
-function get_network(the_root, work_path;N = 100, k = 20, maxk = 40, mu = 0.1, t1 = 2, t2 = 1, minc = 10, maxc = 40)
+function lfr_network(the_root, work_path;N = 100, k = 20, maxk = 40, mu = 0.1, t1 = 2, t2 = 1, minc = 10, maxc = 40)
     # the_root = pwd()
     run(`$the_root/benchmark -N $N -k $k -maxk $maxk -mu $mu -t1 $t1 -t2 $t2 -minc $minc -maxc $maxc`)
 
@@ -90,6 +49,27 @@ function get_network(the_root, work_path;N = 100, k = 20, maxk = 40, mu = 0.1, t
 
     true_com = Int64.(true_com)
     return the_net, true_com
+end
+
+##=================####==============##
+#
+"""
+    init_demographics!(agents; kwargs...)
+Initialize agents' demographic attributes and
+fraction of infected agents at t = 0
+`coop_dist` -> Distribution of cooperation
+`meets_dist` -> Distribution of number of meetings per time step
+`recovt_dist` -> Agent's recovery time distribution
+"""
+function init_demographics!(agents; p_infected_t0 = 0.5, coop_dist, meets_dist, recovt_dist)
+    for ag in agents
+        if rand() <= p_infected_t0
+            ag.state = "I"
+        end
+        ag.p_cop      = rand(coop_dist)
+        ag.num_meets  = 1 + rand(meets_dist)
+        ag.recovery_t = ceil(rand(recovt_dist))
+    end
 end
 
 ##=================####==============##
@@ -118,12 +98,11 @@ end
 
 """
     set_fixed_coop_agents!(agents, params)
-Set cooperating agents with probability `params.p_coop_agents`
+Set cooperating agents with probability `p_coop_agents`
 """
-function set_fixed_coop_agents!(agents, params)
-
+function set_fixed_coop_agents!(agents; p_coop_agents=0.0)
     for ag in agents
-        if rand() <= params.p_coop_agents
+        if rand() <= p_coop_agents
             ag.at_home = true
         end
     end
@@ -136,10 +115,10 @@ end
     set_coop_agents!(agents, params)
 Agent stays at home with probability `Agent.p_cop` at each time step
 """
-function set_coop_agents!(agents, params)
+function set_coop_agents!(agents; p_cop = 0.5)
 
     Threads.@threads for ag in agents
-        if rand() <= ag.p_cop
+        if rand() <= p_cop
             ag.at_home = true
         else
             ag.at_home = false
@@ -154,14 +133,13 @@ end
     assign_contacts!(agent, all_agents, adj_mat, row)
 Assign contacts to `agent` from adjacency matrix
 """
-function assign_contacts!(agent, all_agents, adj_mat, rows)
+#  function assign_contacts!(agent, all_agents, adj_mat, rows)
+function assign_contacts!(g, agent)
 
     agent.contacts_t = Vector{Agent}()
 
-    neigh = get_neigh(agent.id, adj_mat, rows)
-    map(x->push!(agent.contacts_t, all_agents[x]), neigh)
-    agent.degree_t = length(agent.contacts_t)
-    # println(neigh)
+    agent.contacts_t = neighbors(g, agent.id)
+    agent.degree_t = degree(g, agent.id)
 end
 
 ##=================####==============##
@@ -170,7 +148,7 @@ end
     get_next_state!(agent, params)
 Finds `agent.new_state` according to its contacts and meetings
 """
-function get_next_state!(agent, params)
+function get_next_state!(agent;now_t)
 
     # IF AGENT IS SUCEPTIBLE AND IS *NOT* AT HOME...
     if agent.state == "S" && agent.at_home == false
@@ -190,14 +168,14 @@ function get_next_state!(agent, params)
                 # println(coll_state)
                 if rand() < params.attack_rate
                     agent.new_state = "I"
-                    agent.infection_t = params.now_t
+                    agent.infection_t = now_t
                     break
                 end
             end
         end
     elseif agent.state == "I" # INFECTED AGENT TO RECOVER
 
-        time_from_infection = params.now_t - agent.infection_t
+        time_from_infection = now_t - agent.infection_t
         if time_from_infection == agent.recovery_t
             agent.new_state = "R"
             # println(agent.id, "|", time_from_infection, "|RECOVERED!")
