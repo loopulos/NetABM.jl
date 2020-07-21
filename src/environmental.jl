@@ -57,7 +57,7 @@ end
     init_demographics!(agents; kwargs...)
 Initialize agents' demographic attributes and
 fraction of infected agents at t = 0
-`coop_dist` -> Distribution of cooperation
+`coop_dist` -> Cooperation Distribution
 `meets_dist` -> Distribution of number of meetings per time step
 `recovt_dist` -> Agent's recovery time distribution
 """
