@@ -61,33 +61,10 @@ fraction of infected agents at t = 0
 `meets_dist` -> Distribution of number of meetings per time step
 `recovt_dist` -> Agent's recovery time distribution
 """
-function init_demographics!(agents; p_infected_t0 = 0.5, coop_dist, meets_dist, recovt_dist)
+function init_demographics!(agents; states::Array{String} = ["S","I"], initial::Array{Float64} = [0.5,0.5], coop_dist=[0], meets_dist=[0], recovt_dist=[0])
     for ag in agents
-        if rand() <= p_infected_t0
-            ag.state = "I"
-        end
-        ag.p_cop      = rand(coop_dist)
-        ag.num_meets  = 1 + rand(meets_dist)
-        ag.recovery_t = ceil(rand(recovt_dist))
-    end
-end
-
-##=================####==============##
-
-"""
-    initialize_demographics!(agents, params)
-Initialize agents' demographic attributes and
-fraction of infected agents at t = 0
-`coop_dist` -> Distribution of cooperation
-`meets_dist` -> Distribution of number of meetings per time step
-`recovt_dist` -> Agent's recovery time distribution
-"""
-function initialize_demographics!(agents, params, coop_dist, meets_dist, recovt_dist)
-
-    for ag in agents
-        if rand() <= params.p_infected_t0
-            ag.state = "I"
-        end
+        ag.state = sample(states, Weights(initial))
+        push!(ag.previous, ag.state)
         ag.p_cop      = rand(coop_dist)
         ag.num_meets  = 1 + rand(meets_dist)
         ag.recovery_t = ceil(rand(recovt_dist))
@@ -106,7 +83,6 @@ function set_fixed_coop_agents!(agents; p_coop_agents=0.0)
             ag.at_home = true
         end
     end
-
 end
 
 ##=================####==============##
@@ -116,7 +92,6 @@ end
 Agent stays at home with probability `Agent.p_cop` at each time step
 """
 function set_coop_agents!(agents; p_cop = 0.5)
-
     Threads.@threads for ag in agents
         if rand() <= p_cop
             ag.at_home = true
@@ -124,7 +99,6 @@ function set_coop_agents!(agents; p_cop = 0.5)
             ag.at_home = false
         end
     end
-
 end
 
 ##=================####==============##
@@ -133,16 +107,126 @@ end
     assign_contacts!(agent, all_agents, adj_mat, row)
 Assign contacts to `agent` from adjacency matrix
 """
-#  function assign_contacts!(agent, all_agents, adj_mat, rows)
 function assign_contacts!(g, agent)
-
-    agent.contacts_t = Vector{Agent}()
-
     agent.contacts_t = neighbors(g, agent.id)
     agent.degree_t = degree(g, agent.id)
 end
 
+function get_coop!(agents)
+    for agent in agents
+        agent.coopf = [agents[i].id for i in agent.contacts_t if agents[i].at_home]
+        agent.non_coopf = [agents[i].id for i in agent.contacts_t if !agents[i].at_home]
+    end
+end
 ##=================####==============##
+
+"""
+This function looks at the infected neighbors of each agent to compute wether or not
+she will get infected. If both agents adopt a cooperative behavior then the probability
+of infection gets reduced by both terms. As the SIS and SIR models are basically the same
+excep for reinfections then only a flag for SIR is needed.
+"""
+function SI_coop!(agent;inf_prob=0.1, rec_prob=0.3, coop_red=0.7, R=false)
+    infected_coop = [ag.state for ag in agents[agent.coopf] if ag.state == "I"] |> length
+    infected_noncoop = [ag.state for ag in agents[agent.non_coopf] if ag.state == "I"] |> length
+    if agent.state == "S"
+        if agent.at_home
+            inf_prob_co = inf_prob * (1-coop_red)^2
+            inf_prob_no = inf_prob * (1-coop_red)
+        else
+            inf_prob_co = inf_prob * (1-coop_red)
+            inf_prob_no = inf_prob
+        end
+        oddsc = [sample([true,false],Weights([inf_prob_co,1-inf_prob_co])) for i in 1:infected_coop] |> sum
+        oddsn = [sample([true,false],Weights([inf_prob_no,1-inf_prob_no])) for i in 1:infected_noncoop] |> sum
+        odds = oddsc + oddsn
+        if odds > 0
+            agent.new_state = "I"
+        else
+            agent.new_state = "S"
+        end
+    elseif agent.state == "I"
+        if !R
+            if rand() <= rec_prob
+                agent.new_state = "S"
+            else
+                agent.new_state = "I"
+            end
+        else
+            if rand() <= rec_prob
+                agent.new_state = "R"
+            else
+                agent.new_state = "I"
+            end
+        end
+    end
+end
+
+function next_state!(agents;fun=SI_coop!,kwargs...)
+    for agent in agents
+        fun(agent;kwargs...)
+    end
+end
+
+
+
+
+
+function SI_next!(agents; inf_prob=0.1, rec_prob=0.3)
+    for agent in agents
+        if agent.state == "S"
+            infected = [ag.state for ag in agents[agent.contacts_t] if ag.state == "I"] |> length
+            odds = [sample([true,false],Weights([inf_prob,1-inf_prob])) for i in 1:infected] |> sum
+            if odds > 0
+                agent.new_state = "I"
+            else
+                agent.new_state = "S"
+            end
+        elseif agent.state == "I"
+            if rand() <= rec_prob
+                agent.new_state = "S"
+            else
+                agent.new_state = "I"
+            end
+        end
+    end
+end
+
+
+function SIR_next!(agents; inf_prob=0.1, rec_prob=0.3)
+    for agent in agents
+        if agent.state == "S"
+            infected = [ag.state for ag in agents[agent.contacts_t] if ag.state == "I"] |> length
+            odds = [sample([true,false],Weights([inf_prob,1-inf_prob])) for i in 1:infected] |> sum
+            if odds > 0
+                agent.new_state = "I"
+            else
+                agent.new_state = "S"
+            end
+        elseif agent.state == "I"
+            if rand() <= rec_prob
+                agent.new_state = "R"
+            else
+                agent.new_state = "I"
+            end
+        end
+    end
+end
+
+
+"""
+    update_state!(agents)
+Finds agent's next state and updates it, it just packages
+`get_next_state!` and `update_state!`
+"""
+function update_state!(agents)
+    Threads.@threads for ag in agents
+        push!(ag.previous,ag.state)
+        ag.state = ag.new_state
+    end
+end
+
+
 
 """
     get_next_state!(agent, params)
