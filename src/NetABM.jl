@@ -65,6 +65,6 @@ module NetABM
     end
 
 
-    include("agents.jl")
+    #  include("agents.jl")
     include("environmental.jl")
 end # module
