@@ -270,13 +270,13 @@ end
 
 ##=================####==============##
 
-"""
-    update_state!(agent)
-Updates `agent.state` with the one computed in `get_next_state!`
-"""
-function update_state!(agent)
-    agent.state = agent.new_state
-end
+#  """
+#      update_state!(agent)
+#  Updates `agent.state` with the one computed in `get_next_state!`
+#  """
+#  function update_state!(agent)
+#      agent.state = agent.new_state
+#  end
 
 ##=================####==============##
 
