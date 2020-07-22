@@ -126,7 +126,7 @@ she will get infected. If both agents adopt a cooperative behavior then the prob
 of infection gets reduced by both terms. As the SIS and SIR models are basically the same
 excep for reinfections then only a flag for SIR is needed.
 """
-function SI_coop!(agent;inf_prob=0.1, rec_prob=0.3, coop_red=0.7, R=false)
+function SI_coop!(agent, agents;inf_prob=0.1, rec_prob=0.3, coop_red=0.7, R=false)
     infected_coop = [ag.state for ag in agents[agent.coopf] if ag.state == "I"] |> length
     infected_noncoop = [ag.state for ag in agents[agent.non_coopf] if ag.state == "I"] |> length
     if agent.state == "S"
@@ -164,7 +164,7 @@ end
 
 function next_state!(agents;fun=SI_coop!,kwargs...)
     for agent in agents
-        fun(agent;kwargs...)
+        fun(agent,agents;kwargs...)
     end
 end
 
