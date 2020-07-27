@@ -12,6 +12,7 @@ Agent definition for the simulations with parameters:
 `degree_t    ::Int64` -> Degree (Number of contacts) at time t
 `p_cop       ::Float64 ` -> Cooperation probability
 `at_home     ::Bool ` -> Flag to represent Agent is at home
+`adapter     ::Bool ` -> Flag to represent Agent is willing to change behavior
 """
 mutable struct Agent
     id          ::Int64
@@ -28,7 +29,7 @@ mutable struct Agent
     degree_t    ::Int64
     p_cop       ::Float64
     at_home     ::Bool
-    changer     ::Bool
+    adapter     ::Bool
     # DEFAULT CONSTRUCTOR
     Agent(id) = new(id, "S", "S", Vector{String}(), 1, 5, 0, Vector{Int64}(), Vector{String}(), Vector{String}(), 1, 0, 1.0, false,true)
 end

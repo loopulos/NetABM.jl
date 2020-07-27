@@ -104,6 +104,21 @@ end
 ##=================####==============##
 
 """
+    set_adapt_agents!(agents, params)
+Agent stays at home with probability `Agent.p_cop` at each time step
+"""
+function set_adapt_agents!(agents; p_cop = 0.5)
+    Threads.@threads for ag in agents
+        if rand() <= p_cop
+            ag.adapter = true
+        else
+            ag.adapter = false
+        end
+    end
+end
+##=================####==============##
+
+"""
     assign_contacts!(agent, all_agents, adj_mat, row)
 Assign contacts to `agent` from adjacency matrix
 """

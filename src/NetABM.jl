@@ -1,7 +1,7 @@
 __precompile__()
 module NetABM
     using LightGraphs, Random, DelimitedFiles, StatsBase, SparseArrays, Distributions
-    export lectura_uw, lfr_network, Agent, Params
+    export lectura_uw, lfr_network, Agent, Params, get_coop, set_adapt_agents!
     export init_demographics!, get_coop!, next_state!
     export initialize_demographics!, set_fixed_coop_agents!, set_coop_agents!
     export assign_contacts!, get_next_state!, update_state!
@@ -22,6 +22,7 @@ module NetABM
     `degree_t    ::Int64` -> Degree (Number of contacts) at time t
     `p_cop       ::Float64 ` -> Cooperation probability
     `at_home     ::Bool ` -> Flag to represent Agent is at home
+    `adapter     ::Bool ` -> Flag to represent Agent is willing to change behavior
     """
     mutable struct Agent
         id          ::Int64
@@ -38,8 +39,9 @@ module NetABM
         degree_t    ::Int64
         p_cop       ::Float64
         at_home     ::Bool
+        adapter     ::Bool
         # DEFAULT CONSTRUCTOR
-        Agent(id) = new(id, "S", "S", Vector{String}(), 1, 5, 0, Vector{Int64}(), Vector{String}(), Vector{String}(), 1, 0, 1.0, false)
+        Agent(id) = new(id, "S", "S", Vector{String}(), 1, 5, 0, Vector{Int64}(), Vector{String}(), Vector{String}(), 1, 0, 1.0, false, true)
     end
 
     #  """
