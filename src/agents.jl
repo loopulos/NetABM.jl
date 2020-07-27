@@ -30,7 +30,7 @@ mutable struct Agent
     at_home     ::Bool
     changer     ::Bool
     # DEFAULT CONSTRUCTOR
-    Agent(id) = new(id, "S", "S", Vector{String}(), 1, 5, 0, Vector{Int64}(), Vector{String}(), Vector{String}(), 1, 0, 1.0, false,false)
+    Agent(id) = new(id, "S", "S", Vector{String}(), 1, 5, 0, Vector{Int64}(), Vector{String}(), Vector{String}(), 1, 0, 1.0, false,true)
 end
 
 ##=================####==============##

@@ -226,6 +226,20 @@ function update_state!(agents)
     end
 end
 
+function update_coop!(agents,threshoold)
+    Threads.@threads for ag in agents
+        if changer
+            if length(ag.coopf)/ag.degree_t > threshoold
+                ag.at_home = true
+            else
+                ag.at_home = false
+            end
+        end
+    end
+end
+
+
+
 
 
 """
