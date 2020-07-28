@@ -241,19 +241,56 @@ function update_state!(agents)
     end
 end
 
-function update_coop!(agents,threshoold)
+function update_coop!(agents,threshold;lrt=false)
     Threads.@threads for ag in agents
-        if changer
-            if length(ag.coopf)/ag.degree_t > threshoold
+        if ag.adapter
+            if length(ag.coopf)/ag.degree_t > threshold
                 ag.at_home = true
             else
-                ag.at_home = false
+                if lrt
+                    ag.at_home = false
+                end
+            end
+        end
+    end
+end
+
+function update_coop_distance!(agents,g,d,threshold;lrt=false)
+    Threads.@threads for ag in agents
+        if ag.adapter
+            status = agents[neighborhood(g,ag.id,d)|> unique] |> f -> map(x -> x.at_home,f)
+            thecoop = sum(status)
+            tot = length(status)
+            if thecoop/tot >= threshold
+                ag.at_home = true
+            else
+                if lrt
+                    ag.at_home = false
+                end
             end
         end
     end
 end
 
 
+function update_coop_infections!(agents,threshold;lrt=false)
+    Threads.@threads for ag in agents
+        if ag.adapter
+            historic = ag.previous[end-threshold:end]
+            Infected = filter(x->x=="I",historic)
+            Sus = filter(x->x=="S",historic)
+            if length(Infected) >= 1
+                ag.at_home = true
+                #  ag.at_home = !(ag.at_home)
+            else
+                if lrt
+                    ag.at_home = false
+                    #  ag.at_home = !(ag.at_home)
+                end
+            end
+        end
+    end
+end
 
 
 
