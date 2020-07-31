@@ -68,6 +68,9 @@ function init_demographics!(agents; states::Array{String} = ["S","I"], initial::
         ag.p_cop      = rand(coop_dist)
         ag.num_meets  = 1 + rand(meets_dist)
         ag.recovery_t = ceil(rand(recovt_dist))
+        if ag.state == "I"
+            ag.counter = ag.counter+1
+        end
     end
 end
 
@@ -127,12 +130,15 @@ function assign_contacts!(g, agent)
     agent.degree_t = degree(g, agent.id)
 end
 
+
 function get_coop!(agents)
-    for agent in agents
-        agent.coopf = [agents[i].id for i in agent.contacts_t if agents[i].at_home]
-        agent.non_coopf = [agents[i].id for i in agent.contacts_t if !agents[i].at_home]
+    Threads.@threads for agent in agents
+        agent.coopf = findall(x-> agents[x].at_home == true, agent.contacts_t)
+        agent.non_coopf = findall(x-> agents[x].at_home == false, agent.contacts_t)
     end
 end
+
+
 ##=================####==============##
 
 """
@@ -237,10 +243,10 @@ Finds agent's next state and updates it, it just packages
 function update_state!(agents)
     Threads.@threads for ag in agents
         push!(ag.previous,ag.state)
-        ag.state = ag.new_state
-        if ag.state == "I"
+        if (ag.state == "S" && ag.new_state == "I")
             ag.counter = ag.counter+1
         end
+        ag.state = ag.new_state
     end
 end
 
@@ -308,22 +314,48 @@ function update_coop_distance_inf!(agents,g,d,threshold;lrt=false)
     Threads.@threads for ag in agents
         if ag.adapter
             status = agents[neighborhood(g,ag.id,d)|> unique] |> f -> map(x -> prev_infected(x,threshold)[1],f)
-            thecoop = sum(map(x -> "I" in x, status))
+            theinfected = sum(map(x -> "I" in x, status))
             tot = length(status)
-            if thecoop >= 1
+            if theinfected >= 1
                 ag.at_home = true
             else
                 if lrt
                     ag.at_home = false
                 end
             end
-            #  if thecoop/tot >= threshold
-            #      ag.at_home = true
-            #  else
-            #      if lrt
-            #          ag.at_home = false
-            #      end
-            #  end
+        end
+    end
+end
+
+##### Check infections and change behavior depending on distance
+
+
+function update_single_given_distance!(agents,g,v,d,threshold,probs)
+    neigh = neighborhood_dists(g,v,d)
+    nodes = first.(neigh)
+    distances = last.(neigh)
+    changed = false
+    for dist in 0:d
+        current = findall(x->x==dist,distances)
+        infected = findall(x->x.counter >= threshold, agents[current])
+        for time in 1:length(infected)
+            if rand() < probs[dist+1]
+                agents[v].at_home = true
+                changed = true
+                break
+            end
+        end
+        if changed
+            break
+        end
+    end
+end
+
+
+function update_coop_given_distance!(agents,g,d,threshold,probs;lrt=false)
+    Threads.@threads for ag in agents
+        if ag.adapter
+            update_single_given_distance!(agents,g,ag.id,d,threshold,probs)
         end
     end
 end
