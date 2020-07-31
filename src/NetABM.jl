@@ -40,11 +40,11 @@ module NetABM
         degree_t    ::Int64
         p_cop       ::Float64
         attitude    ::String
-        coop_efect  ::Float64
+        coop_effect  ::Float64
         at_home     ::Bool
         adapter     ::Bool
         # DEFAULT CONSTRUCTOR
-        Agent(id) = new(id, "S", "S", Vector{String}(), 1, 5, 0, Vector{Int64}(), Vector{String}(), Vector{String}(), 0, 0, 1.0, "rt", 1.0, false, true)
+        Agent(id) = new(id, "S", "S", Vector{String}(), 1, 5, 0, Vector{Int64}(), Vector{String}(), Vector{String}(),0, 0, 0, 1.0, "rt", 0.0, false, true)
     end
 
     ##=================####==============##
