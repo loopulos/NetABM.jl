@@ -3,7 +3,7 @@ module NetABM
     using LightGraphs, Random, DelimitedFiles, StatsBase, SparseArrays, Distributions
     export lectura_uw, lfr_network, Agent, Params, get_coop, set_adapt_agents!, update_coop!
     export init_demographics!, get_coop!, next_state!, update_coop_infections!, update_coop_distance!
-    export initialize_demographics!, set_fixed_coop_agents!, set_coop_agents!
+    export initialize_demographics!, set_fixed_coop_agents!, set_coop_agents!, SI_attitude!
     export assign_contacts!, get_next_state!, update_state!, update_single_given_distance!, update_coop_given_distance!
     export update_all_agents!, get_populations, export_parameters,update_single_effect_distance!, update_effect_given_distance!
 
