@@ -98,6 +98,8 @@ function set_coop_agents!(agents; p_cop = 0.5)
     Threads.@threads for ag in agents
         if rand() <= p_cop
             ag.at_home = true
+            ag.attitude = "ra"
+            ag.coop_effect = 1.0
         else
             ag.at_home = false
         end
@@ -182,6 +184,37 @@ function SI_coop!(agent, agents;inf_prob=0.1, rec_prob=0.3, coop_red=0.7, R=fals
         end
     end
 end
+
+function SI_attitude!(agent, agents;inf_prob=0.1, rec_prob=0.3, R=false)
+    #  sus = findall(x -> x.state == "S",agents)
+    if agent.state == "S"
+        infec = [ag.coop_effect for ag in agents[agent.contacts_t] if ag.state == "I"]
+        the_odds = @. inf_prob * (1-agent.coop_effect) * (1-infec)
+        odds = the_odds |> f -> map(x -> sample([true,false], Weights([x,1-x])),f) |> sum
+        if odds > 0
+            agent.new_state = "I"
+        else
+            agent.new_state = "S"
+        end
+    elseif agent.state == "I"
+        if !R
+            if rand() <= rec_prob
+                agent.new_state = "S"
+            else
+                agent.new_state = "I"
+            end
+        else
+            if rand() <= rec_prob
+                agent.new_state = "R"
+            else
+                agent.new_state = "I"
+            end
+        end
+    end
+end
+
+
+
 
 function next_state!(agents;fun=SI_coop!,kwargs...)
     for agent in agents
@@ -360,7 +393,31 @@ function update_coop_given_distance!(agents,g,d,threshold,probs;lrt=false)
     end
 end
 
+function update_single_effect_distance!(agents,g,v,d,threshold,step)
+    neigh = neighborhood_dists(g,v,d)
+    nodes = first.(neigh)
+    distances = last.(neigh)
+    #  changed = false
+    for dist in 0:d
+        current = findall(x->x==dist,distances)
+        infected = findall(x->x.counter >= threshold, agents[current])
+        for time in 1:length(infected)
+            if agents[v].attitude == "ra"
+                agents[v].coop_effect = max(agents[v].coop_effect-step[dist+1],0)
+            elseif agents[v].attitude == "rt"
+                agents[v].coop_effect = min(agents[v].coop_effect+step[dist+1],1)
+            end
+        end
+    end
+end
 
+function update_effect_given_distance!(agents,g,d,threshold,step)
+    Threads.@threads for ag in agents
+        if ag.adapter
+            update_single_effect_distance!(agents,g,ag.id,d,threshold,step)
+        end
+    end
+end
 ################################################################################################################################################
 ################################################################################################################################################
 ################################################################################################################################################
