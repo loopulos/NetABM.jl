@@ -627,8 +627,8 @@ begin
         Threads.@threads for a in 1:100
             g = barabasi_albert(num_agents,10)
             agents = [Agent(i) for i = 1:num_agents];
-            the_selected = rand(1:num_agents)
-            init_demographics!(agents;states=["S","I"],initial=[1.,0.]);
+            #  the_selected = rand(1:num_agents)
+            init_demographics!(agents;states=["S","I"],initial=[0.9,0.1]);
             #  init_demographics!(agents[setdiff(1:num_agents,the_selected)];states=["S","I"],initial=[1.,0.]);
             #  init_demographics!([agents[the_selected]];states=["S","I"],initial=[0.,1.]);
             set_coop_agents!(agents;p_cop=0.5);
@@ -662,3 +662,87 @@ p
 
 savefig(p,"figs/sis_attitudes_1I.png")
 p
+
+
+###################################################
+###################################################
+###################################################
+###################################################
+# This is the same as the previous but looking at the
+# mean ρ of each group. Didn't want to mess with the
+# already working code.
+
+num_agents = 1000
+global Imean = Array{Float64}(undef,0)
+global Ilow = Array{Float64}(undef,0)
+global Ihigh = Array{Float64}(undef,0)
+global Iall = Array{Array}(undef,0)
+global n_boot = 100
+global cil = 0.95
+#  global d = 0
+#  global probs = [1]
+global j
+#  global adoptprob = (1,[0.5,0.3])
+global adoptstep = (0,[0.1])
+global p = plot(xlims=(0,100),ylims=(0,1),xlabel = L"t_i", ylabel = L"I/N")
+        global rtall = Array{Float64}(undef,0);
+        global lrtall = Array{Float64}(undef,0);
+        global raall = Array{Float64}(undef,0);
+        global lraall = Array{Float64}(undef,0);
+begin
+    for j in [0.4]
+        global Imean = Array{Float64}(undef,0)
+        global Ilow = Array{Float64}(undef,0)
+        global Ihigh = Array{Float64}(undef,0)
+        global Iall = Array{Array}(undef,0)
+        Threads.@threads for a in 1:100
+            g = barabasi_albert(num_agents,10)
+            agents = [Agent(i) for i = 1:num_agents];
+            init_demographics!(agents;states=["S","I"],initial=[0.7,0.3]);
+            set_coop_agents!(agents;p_cop=0.5);
+            set_adapt_agents!(agents;p_cop=j);
+            map(x -> assign_contacts!(g,x), agents);
+            #  get_coop!(agents);
+            rt = Array{Float64}(undef,0);
+            ra = Array{Float64}(undef,0);
+            lrt = Array{Float64}(undef,0);
+            lra = Array{Float64}(undef,0);
+            for i in 1:100
+                next_state!(agents;fun=SI_attitude!,inf_prob=0.1, rec_prob=0.1, R=false);
+                update_state!(agents);
+                update_effect_given_distance!(agents,g,adoptstep[1],1,adoptstep[2]);
+                #  get_coop!(agents);
+                #  agents[1].adapter = true
+                #  agents[3].counter = 1
+                #  agents[1].coop_effect
+                #  update_single_effect_distance!(agents,g,3,0,1,adoptstep[2])
+                #  agents[1].coop_effect
+                push!(rt,mean([ag.coop_effect for ag in agents if ag.attitude == "rt" && !ag.adapter]));
+                push!(lrt,mean([ag.coop_effect for ag in agents if ag.attitude == "rt" && ag.adapter]));
+                push!(ra,mean([ag.coop_effect for ag in agents if ag.attitude == "ra" && !ag.adapter]));
+                push!(lra,mean([ag.coop_effect for ag in agents if ag.attitude == "ra" && ag.adapter]));
+            end
+            push!(rtall,I)
+            push!(lrtall,I)
+            push!(raall,I)
+            push!(lraall,I)
+        end
+        end
+        #  for step in eachindex(Iall[1])
+        #      bs1 = bootstrap(mean,getindex.(Iall,step),BasicSampling(n_boot))
+        #      bs2 = bootstrap(std,getindex.(Iall,step),BasicSampling(n_boot))
+        #      bci1 = confint(bs1, BasicConfInt(cil))
+        #      bci2 = confint(bs2, BasicConfInt(cil))
+        #      push!(Imean,bci1[1][1])
+        #      push!(Ilow,bci2[1][2])
+        #      push!(Ihigh,bci2[1][3])
+        #  end
+        #  p=plot!(1:length(Imean), Imean, ribbon = (Ilow, Ihigh), fillalpha=0.35,label=string(j))
+        #  p=plot!(1:length(Imean), Imean, ribbon = (Ilow, Ihigh), fillalpha=0.35,label=string(j))
+    end
+end
+p
+
+savefig(p,"figs/sis_attitudes_1I.png")
+p
+

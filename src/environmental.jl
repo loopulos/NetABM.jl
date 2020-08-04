@@ -393,14 +393,14 @@ function update_coop_given_distance!(agents,g,d,threshold,probs;lrt=false)
     end
 end
 
-function update_single_effect_distance!(agents,g,v,d,threshold,step)
+function update_single_effect_distance!(agents,g,d,threshold,step;v)
     neigh = neighborhood_dists(g,v,d)
     nodes = first.(neigh)
     distances = last.(neigh)
-    #  changed = false
-    for dist in 0:d
+    for dist in distances
         current = findall(x->x==dist,distances)
-        infected = findall(x->x.counter >= threshold, agents[current])
+        current_nodes = nodes[current]
+        infected = findall(x->x.counter >= threshold, agents[current_nodes])
         for time in 1:length(infected)
             if agents[v].attitude == "ra"
                 agents[v].coop_effect = max(agents[v].coop_effect-step[dist+1],0)
@@ -414,7 +414,7 @@ end
 function update_effect_given_distance!(agents,g,d,threshold,step)
     Threads.@threads for ag in agents
         if ag.adapter
-            update_single_effect_distance!(agents,g,ag.id,d,threshold,step)
+            update_single_effect_distance!(agents,g,d,threshold,step;v=ag.id)
         end
     end
 end
