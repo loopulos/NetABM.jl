@@ -606,16 +606,9 @@ p
 # this would be an equivalent to increase biosecurity
 
 num_agents = 1000
-global Imean = Array{Float64}(undef,0)
-global Ilow = Array{Float64}(undef,0)
-global Ihigh = Array{Float64}(undef,0)
-global Iall = Array{Array}(undef,0)
 global n_boot = 100
 global cil = 0.95
-#  global d = 0
-#  global probs = [1]
 global j
-#  global adoptprob = (1,[0.5,0.3])
 global adoptstep = (0,[0.1])
 global p = plot(xlims=(0,100),ylims=(0,1),xlabel = L"t_i", ylabel = L"I/N")
 begin
@@ -660,7 +653,7 @@ begin
 end
 p
 
-savefig(p,"figs/sis_attitudes_1I.png")
+savefig(p,"figs/sir_attitudes_1I.png")
 p
 
 
@@ -746,3 +739,147 @@ p
 savefig(p,"figs/sis_attitudes_1I.png")
 p
 
+
+
+
+
+####################################
+# Memory test
+#
+using NetABM
+using LightGraphs
+using StatsBase
+using Plots
+using Statistics
+using Bootstrap
+using LaTeXStrings
+
+global num_agents = 1000
+global n_boot = 100
+global cil = 0.95
+global j
+global adoptstep = (0,[0.1])
+global p = plot(xlims=(0,100),ylims=(0,1),xlabel = L"t_i", ylabel = L"I/N")
+
+@time let
+    for j in [0.0, 0.1, 0.4, 0.7, 1.0]
+    #  for j in [0.7]
+        Imean = Array{Float64}(undef,0)
+        Ilow = Array{Float64}(undef,0)
+        Ihigh = Array{Float64}(undef,0)
+        Iall = Array{Array}(undef,0)
+        for a in 1:100
+            g = barabasi_albert(num_agents,3)
+            agents = [Agent(i) for i = 1:num_agents];
+            init_demographics!(agents;states=["S","I"],initial=[0.9,0.1]);
+            set_coop_agents!(agents;p_cop=0.5);
+            set_adapt_agents!(agents;p_cop=j);
+            map(x -> assign_contacts!(g,x), agents);
+            #  get_coop!(agents);
+            I = Array{Float64}(undef,0);
+            for i in 1:100
+                next_state!(agents;fun=SI_attitude!,inf_prob=0.1, rec_prob=0.03, R=false);
+                update_state!(agents);
+                update_effect_given_distance!(agents,g,adoptstep[1],1,adoptstep[2]);
+                #  get_coop!(agents);
+                push!(I,([ag.state for ag in agents if ag.state=="I"] |> length)/num_agents);
+                #  GC.gc()
+            end
+            push!(Iall,I)
+            GC.gc()
+        end
+        for step in eachindex(Iall[1])
+            bs1 = bootstrap(mean,getindex.(Iall,step),BasicSampling(n_boot))
+            bs2 = bootstrap(std,getindex.(Iall,step),BasicSampling(n_boot))
+            bci1 = confint(bs1, BasicConfInt(cil))
+            bci2 = confint(bs2, BasicConfInt(cil))
+            push!(Imean,bci1[1][1])
+            push!(Ilow,bci2[1][2])
+            push!(Ihigh,bci2[1][3])
+            #  GC.gc()
+        end
+        p=plot!(1:length(Imean), Imean, ribbon = (Ilow, Ihigh), fillalpha=0.35,label=string(j))
+    end
+    GC.gc()
+end
+p
+savefig(p,"figs/sis_attitudes_01.png")
+
+
+global rtall = Array{Array}(undef,0);
+global lrtall = Array{Array}(undef,0);
+global raall = Array{Array}(undef,0);
+global lraall = Array{Array}(undef,0);
+global p = plot(xlims=(0,100),ylims=(0,1),xlabel = L"t_i", ylabel = L"I/N")
+@time let
+    #  for j in [0.0, 0.1, 0.4, 0.7, 1.0]
+    for j in [0.99]
+        Imean = Array{Float64}(undef,0)
+        Ilow = Array{Float64}(undef,0)
+        Ihigh = Array{Float64}(undef,0)
+        Iall = Array{Array}(undef,0)
+        for a in 1:100
+            g = barabasi_albert(num_agents,3)
+            agents = [Agent(i) for i = 1:num_agents];
+            init_demographics!(agents;states=["S","I"],initial=[0.9,0.1]);
+            set_coop_agents!(agents;p_cop=0.5);
+            set_adapt_agents!(agents;p_cop=j);
+            map(x -> assign_contacts!(g,x), agents);
+            #  get_coop!(agents);
+            I = Array{Float64}(undef,0);
+            rt = Array{Float64}(undef,0);
+            ra = Array{Float64}(undef,0);
+            lrt = Array{Float64}(undef,0);
+            lra = Array{Float64}(undef,0);
+            for i in 1:100
+                next_state!(agents;fun=SI_attitude!,inf_prob=0.1, rec_prob=0.03, R=false);
+                update_state!(agents);
+                update_effect_given_distance!(agents,g,adoptstep[1],1,adoptstep[2]);
+                #  get_coop!(agents);
+                push!(I,([ag.state for ag in agents if ag.state=="I"] |> length)/num_agents);
+                push!(rt,mean([ag.coop_effect for ag in agents if ag.attitude == "rt" && !ag.adapter]));
+                push!(lrt,mean([ag.coop_effect for ag in agents if ag.attitude == "rt" && ag.adapter]));
+                push!(ra,mean([ag.coop_effect for ag in agents if ag.attitude == "ra" && !ag.adapter]));
+                push!(lra,mean([ag.coop_effect for ag in agents if ag.attitude == "ra" && ag.adapter]));
+            end
+            push!(Iall,I)
+            push!(rtall,rt)
+            push!(lrtall,lrt)
+            push!(raall,ra)
+            push!(lraall,lra)
+            GC.gc()
+        end
+        for step in eachindex(Iall[1])
+            bs1 = bootstrap(mean,getindex.(Iall,step),BasicSampling(n_boot))
+            bs2 = bootstrap(std,getindex.(Iall,step),BasicSampling(n_boot))
+            bci1 = confint(bs1, BasicConfInt(cil))
+            bci2 = confint(bs2, BasicConfInt(cil))
+            push!(Imean,bci1[1][1])
+            push!(Ilow,bci2[1][2])
+            push!(Ihigh,bci2[1][3])
+            #  GC.gc()
+        end
+        p=plot!(1:length(Imean), Imean, ribbon = (Ilow, Ihigh), fillalpha=0.35,label=string(j))
+    end
+    GC.gc()
+end
+
+Imean = Array{Float64}(undef,0)
+Ilow = Array{Float64}(undef,0)
+Ihigh = Array{Float64}(undef,0)
+Iall = Array{Array}(undef,0)
+for step in eachindex(lrtall[1])
+    bs1 = bootstrap(mean,getindex.(lraall,step),BasicSampling(n_boot))
+    bs2 = bootstrap(std,getindex.(lraall,step),BasicSampling(n_boot))
+    bci1 = confint(bs1, BasicConfInt(cil))
+    bci2 = confint(bs2, BasicConfInt(cil))
+    push!(Imean,bci1[1][1])
+    push!(Ilow,bci2[1][2])
+    push!(Ihigh,bci2[1][3])
+end
+p=plot!(1:length(Imean), Imean, ribbon = (Ilow, Ihigh), fillalpha=0.35,label="lra")
+p
+
+
+p
+#  savefig(p,"figs/sis_attitudes_01.png")

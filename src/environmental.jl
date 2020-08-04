@@ -397,7 +397,7 @@ function update_single_effect_distance!(agents,g,d,threshold,step;v)
     neigh = neighborhood_dists(g,v,d)
     nodes = first.(neigh)
     distances = last.(neigh)
-    for dist in distances
+    for dist in unique(distances)
         current = findall(x->x==dist,distances)
         current_nodes = nodes[current]
         infected = findall(x->x.counter >= threshold, agents[current_nodes])
