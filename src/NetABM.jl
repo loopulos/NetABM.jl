@@ -75,5 +75,9 @@ module NetABM
 
 
     #  include("agents.jl")
+    include("initialize.jl")
+    include("interactions.jl")
     include("environmental.jl")
+    include("update_schemes.jl")
+    include("data_out.jl")
 end # module

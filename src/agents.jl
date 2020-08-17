@@ -47,16 +47,17 @@ Global parameters for the simulation
 `attack_rate::Float64` -> Virus' attack rate
 """
 mutable struct Params
-    num_agents    ::Int64
-    now_t         ::Int64
-    μ_recovT_agents::Int64
-    p_link        ::Float64
-    p_infected_t0 ::Float64
-    μ_cop_agents ::Float64
-    σ_cop_agents ::Float64
-    attack_rate   ::Float64
-    repetition    ::Int
+    num_agents      ::Int64
+    now_t           ::Int64
+    μ_recovT_agents ::Int64
+    p_link          ::Float64
+    p_infected_t0   ::Float64
+    μ_cop_agents    ::Float64
+    σ_cop_agents    ::Float64
+    attack_rate     ::Float64
+    repetition      ::Int
     # DEFAULT CONSTRUCTOR
     Params() = new(0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0)
 end
 
+##=================####==============##
