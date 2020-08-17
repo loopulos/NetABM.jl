@@ -41,11 +41,11 @@ function export_parameters(params, out_path)
     filename = "parameters_N_$(params.num_agents)_rep_$(params.repetition).txt"
 
     open(joinpath(out_path, filename), "w") do io
-    println(io, "num_agents   :\t", params.num_agents   )
-    println(io, "p_link       :\t", params.p_link       )
-    println(io, "p_infected_t0:\t", params.p_infected_t0)
-    println(io, "attack_rate  :\t", params.attack_rate  )
-    println(io, "repetition   :\t", params.repetition   )
+        println(io, "num_agents   :\t", params.num_agents   )
+        println(io, "p_link       :\t", params.p_link       )
+        println(io, "p_infected_t0:\t", params.p_infected_t0)
+        println(io, "attack_rate  :\t", params.attack_rate  )
+        println(io, "repetition   :\t", params.repetition   )
     end
 
 end
