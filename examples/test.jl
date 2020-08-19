@@ -1,11 +1,20 @@
-#  using NetABM, LightGraphs
-using NetABM
-using LightGraphs
-using StatsBase
-using Plots
-using Statistics
-using Bootstrap
-using LaTeXStrings
+using Pkg
+
+function useit(list::Array{Symbol})
+    installed = [key for key in keys(Pkg.installed())]
+    strpackages = @. string(list)
+    uninstalled = setdiff(strpackages,installed)
+
+    map(Pkg.add,uninstalled)
+    for package ∈ list
+        @eval using $package
+    end
+end
+
+thep = [:LightGraphs, :StatsBase, :Plots, :GraphPlot, :Statistics, :LaTeXStrings, :Bootstrap, :NetABM]
+useit(thep)
+#  If NetABM is not available then it should be installed via
+#  ] add https://github.com/loopulos/NetABM.jl
 
 num_agents = 1000
 #  g = erdos_renyi(num_agents,0.4)
@@ -805,15 +814,23 @@ end
 p
 savefig(p,"figs/sis_attitudes_01.png")
 
-
 global rtall = Array{Array}(undef,0);
 global lrtall = Array{Array}(undef,0);
 global raall = Array{Array}(undef,0);
 global lraall = Array{Array}(undef,0);
+global adoptstep = (1,[0.1,0.05])
+
+
+global num_agents = 1000
+global n_boot = 100
+global cil = 0.95
+global j
+global adoptstep = (0,[0.1])
+global p = plot(xlims=(0,100),ylims=(0,1),xlabel = L"t_i", ylabel = L"I/N")
 global p = plot(xlims=(0,100),ylims=(0,1),xlabel = L"t_i", ylabel = L"I/N")
 @time let
     #  for j in [0.0, 0.1, 0.4, 0.7, 1.0]
-    for j in [0.99]
+    for j in [0.5]
         Imean = Array{Float64}(undef,0)
         Ilow = Array{Float64}(undef,0)
         Ihigh = Array{Float64}(undef,0)
@@ -868,7 +885,7 @@ Imean = Array{Float64}(undef,0)
 Ilow = Array{Float64}(undef,0)
 Ihigh = Array{Float64}(undef,0)
 Iall = Array{Array}(undef,0)
-for step in eachindex(lrtall[1])
+for step in eachindex(lraall[1])
     bs1 = bootstrap(mean,getindex.(lraall,step),BasicSampling(n_boot))
     bs2 = bootstrap(std,getindex.(lraall,step),BasicSampling(n_boot))
     bci1 = confint(bs1, BasicConfInt(cil))
@@ -877,7 +894,8 @@ for step in eachindex(lrtall[1])
     push!(Ilow,bci2[1][2])
     push!(Ihigh,bci2[1][3])
 end
-p=plot!(1:length(Imean), Imean, ribbon = (Ilow, Ihigh), fillalpha=0.35,label="lra")
+pyplot()
+p=plot!(1:length(Imean), Imean, ribbon = (Ilow, Ihigh), fillalpha=0.35,label="lrt")
 p
 
 
