@@ -110,6 +110,7 @@ adj_mat = adjacency_matrix(g)
 rows = rowvals(adj_mat)
 
 println("NETWORK DONE")
+
 ##=================####==============##
 # INITIALIZE MEETS, COOPERATION AND RECOVERY TIMES DISTRIBUTION
 

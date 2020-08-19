@@ -9,14 +9,12 @@
 Finds agent's next state and updates it, it just packages
 `get_next_state!` and `update_state!`
 """
-function update_state!(agents)
-    Threads.@threads for ag in agents
-        push!(ag.previous,ag.state)
-        if (ag.state == "S" && ag.new_state == "I")
-            ag.counter = ag.counter+1
-        end
-        ag.state = ag.new_state
+function update_state!(ag)
+    push!(ag.previous, ag.state)
+    if (ag.state == "S" && ag.new_state == "I")
+        ag.counter = ag.counter + 1
     end
+    ag.state = ag.new_state
 end
 
 ##=================####==============##
@@ -179,15 +177,19 @@ end
 ##=================####==============##
 
 """
-    update_all_agents!(agents, params)
+    update_all_agents!(agents, now_t)
 Finds agent's next state and updates it, it just packages
 `get_next_state!` and `update_state!`
 """
 function update_all_agents!(agents, params)
     # FIND AGENTS' NEXT STATE FROM INTERACTIONS
-    Threads.@threads for ag in agents
-        get_next_state!(ag, params)
+    Threads.@threads for ag_id in 1:params.num_agents
+        get_next_state!(agents, ag_id, params)
     end
+    
+    #  Threads.@threads for ag in agents
+    #      get_next_state!(ag, now_t)
+    #  end
 
     # UPDATE AGENTS' STATE
     Threads.@threads for ag in agents

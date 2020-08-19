@@ -1,3 +1,7 @@
+##=================####==============##
+# Definition of structs used in the model
+##=================####==============##
+
 """
     Agent(id, neighs, p_cop, state)
 Agent definition for the simulations with parameters:

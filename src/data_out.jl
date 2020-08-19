@@ -28,7 +28,8 @@ function get_populations(agents, params)
         #     species[4] += 1.0
         end
     end
-    return species ./ params.num_agents
+    #  return species ./ params.num_agents
+    return species
 end
 ##=================####==============##
 

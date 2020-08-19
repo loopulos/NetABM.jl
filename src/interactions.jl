@@ -1,22 +1,22 @@
 ##=================####==============##
-
 # MZH Agents Interactions
-
 ##=================####==============##
 
 """
     get_next_state!(agent, params)
 Finds `agent.new_state` according to its contacts and meetings
 """
-function get_next_state!(agent;now_t)
+function get_next_state!(agents, ag_id, params)
+
+    agent = agents[ag_id]
 
     # IF AGENT IS SUCEPTIBLE AND IS *NOT* AT HOME...
     if agent.state == "S" && agent.at_home == false
 
         if agent.num_meets <= agent.degree_t
-            meets = sample(agent.contacts_t, agent.num_meets, replace=false)
+            meets = [agents[id] for id in sample(agent.contacts_t, agent.num_meets, replace=false)]
         else
-            meets = agent.contacts_t
+            meets = [agents[id] for id in agent.contacts_t]
         end
 
         # println(agent.id, "|meets:", [x.id for x in meets])
@@ -28,14 +28,14 @@ function get_next_state!(agent;now_t)
                 # println(coll_state)
                 if rand() < params.attack_rate
                     agent.new_state = "I"
-                    agent.infection_t = now_t
+                    agent.infection_t = params.now_t
                     break
                 end
             end
         end
     elseif agent.state == "I" # INFECTED AGENT TO RECOVER
 
-        time_from_infection = now_t - agent.infection_t
+        time_from_infection = params.now_t - agent.infection_t
         if time_from_infection == agent.recovery_t
             agent.new_state = "R"
             # println(agent.id, "|", time_from_infection, "|RECOVERED!")
