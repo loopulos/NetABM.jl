@@ -4,6 +4,7 @@
 
 ##=================####==============##
 
+using NetABM
 using ArgParse      # For CLI arguments
 using StatsBase     # For sample function
 using SparseArrays  # For Adyacency Matrix
@@ -15,7 +16,7 @@ using GraphIO
 
 ##=================####==============##
 
-include("NetABM.jl") # Include file with functions and definitions
+#  include("NetABM.jl") # Include file with functions and definitions
 
 ### ============== ### ============== ### ============== ###
 ### SYSTEM'S PARAMETERS FROM COMMAND LINE
@@ -59,7 +60,7 @@ args = parse_args(args_settings)
 ##=================####==============##
 ## ASIGN SYSTEM'S PARAMETERS FROM CLI
 
-params = Params()
+params = NetABM.Params()
 
 # params.num_agents      = args["numAgents"] # Number of agents (32768)
 params.p_infected_t0   = args["initialI"] # Initial fraction of infected agents
@@ -88,17 +89,18 @@ params.repetition      = args["rep"] # Repetition ID for ensemble statistics
 # data_out_path = joinpath(homedir(),
 #     "Code", "Collaborations", "networkEpidemiology_MX", "julia_ABM", "data", "EOD")
 
-repo_path = joinpath(homedir(), "GitRepos", "networkEpidemiology_MX")
+#  repo_path = joinpath(homedir(), "GitRepos", "networkEpidemiology_MX")
 
-data_out_path = joinpath(homedir(),
-    "/storage", "zumaya_g", "zumaya", "NetABM", "EOD")
+#  data_out_path = joinpath(homedir(),
+#      "/storage", "zumaya_g", "zumaya", "NetABM", "EOD")
 
 ##=================####==============##
 # INITIALIZE ADJACENCY MATRIX (LFR Model)
 
 println("NETWORK SET-UP")
 
-g = loadgraph(joinpath(repo_path,"data","red_cdmx_eod.graphml"), "G", GraphIO.GraphML.GraphMLFormat())
+#  g = loadgraph(joinpath(repo_path,"data","red_cdmx_eod.graphml"), "G", GraphIO.GraphML.GraphMLFormat())
+g = erdos_renyi(100,0.6)
 
 adj_mat = adjacency_matrix(g)
 
@@ -116,13 +118,15 @@ pc_σ = params.σ_cop_agents # STD_DEV COOPERATION PROBABILITY
 
 # meets_dist = Exponential()
 meets_dist  = Geometric()
-coop_dist   = truncated(Normal(pc_μ, pc_σ), 0.0, 1.0)
-recovt_dist = truncated(Poisson(rt_μ), 7, 35)
+#  coop_dist   = truncated(Normal(pc_μ, pc_σ), 0.0, 1.0)
+coop_dist   = Normal(pc_μ, pc_σ)
+recovt_dist = Poisson(rt_μ)
 
 ##=================####==============##
 
 # DEFINE AGENTS POPULATION (DEFAULT VALUES)
-agents = [Agent(id) for id in 1:params.num_agents]
+agents = [NetABM.Agent(id) for id in 1:params.num_agents]
+
 
 # MODIFY AGENT'S CHARACTERISTICS ACCORDING TO ITS DEMOGRAPHICS
 initialize_demographics!(agents, params, coop_dist, meets_dist, recovt_dist)
@@ -130,6 +134,10 @@ initialize_demographics!(agents, params, coop_dist, meets_dist, recovt_dist)
 # ASSGINS CONTACTS TO agent FROM adj_mat
 for ag in agents
     assign_contacts!(ag, agents, adj_mat, rows)
+end
+
+for ag in agents
+    assign_contacts!(g,ag)
 end
 
 ##=================####==============##
@@ -146,6 +154,7 @@ num_R = []
 # INITIALIZE TIME AND POPULATIONS
 params.now_t = 0
 populations = get_populations(agents, params)
+populations
 
 ##=================####==============##
 
