@@ -202,6 +202,7 @@ global sumI = []
 end
 
 theme(:default)
+using DelimitedFiles
 
 plt = heatmap(
         xlabel = "Cooperative Agents",
@@ -218,6 +219,8 @@ plt = heatmap!(xs, ys, z, aspect_ratio = 1, clim=(0,1), c = :algae,dpi=300)
 plt
 png(plt,"figs/heatmap_scaled_maximum_coop.png")
 savefig(plt,"figs/heatmap_scaled_maximum_coop.pdf")
+writedlm("data/max_inf_coop.csv",maxI)
+
 
 
 plt = heatmap(
@@ -235,4 +238,5 @@ plt = heatmap!(xs, ys, z, aspect_ratio = 1, clim=(0,1), c = :algae,dpi=300)
 plt
 png(plt,"figs/heatmap_scaled_total_coop.png")
 savefig(plt,"figs/heatmap_scaled_total_coop.pdf")
+writedlm("data/tot_inf_coop.csv",sumI)
 
