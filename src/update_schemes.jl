@@ -166,6 +166,34 @@ end
 
 ##=================####==============##
 
+function update_single_effect_distance_coop!(agents,g,d,threshold,step;v)
+    neigh = neighborhood_dists(g,v,d)
+    nodes = first.(neigh)[2:end]
+    distances = last.(neigh)[2:end]
+    for dist in unique(distances)
+        current = findall(x->x==dist,distances)
+        current_nodes = nodes[current]
+        mean_effect = mean([x.coop_effect for x in agents[current_nodes]])
+        if agents[v].attitude == "ra"
+            agents[v].coop_effect = max(agents[v].coop_effect-mean_effect*step[dist+1],0)
+        elseif agents[v].attitude == "rt"
+            agents[v].coop_effect = min(agents[v].coop_effect+mean_effect*step[dist+1],1)
+        end
+    end
+end
+
+##=================####==============##
+
+function update_effect_given_distance_coop!(agents,g,d,threshold,step)
+    Threads.@threads for ag in agents
+        if ag.adapter
+            update_single_effect_distance_coop!(agents,g,d,threshold,step;v=ag.id)
+        end
+    end
+end
+
+##=================####==============##
+
 #  """
 #      update_state!(agent)
 #  Updates `agent.state` with the one computed in `get_next_state!`
