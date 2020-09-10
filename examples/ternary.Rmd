@@ -1,0 +1,62 @@
+---
+title: "Ternary Plots for Dynamic Risk Attitudes"
+output: html_notebook
+---
+
+```{r,echo=FALSE,warning=FALSE,include=FALSE}
+paquetines <- c("stringi","reshape2","plyr","dplyr","tidyr","readr",
+                "ggplot2","lubridate","magrittr", "Ternary",
+                "latex2exp")
+no_instalados <- paquetines[!(paquetines %in% installed.packages()[,"Package"])]
+if(length(no_instalados)) install.packages(no_instalados)
+lapply(paquetines, library, character.only = TRUE)
+```
+
+```{r,echo=FALSE,waring=FALSE}
+# Sys.setlocale("LC_ALL","English")
+# Sys.setenv(LANG = "en_US.UTF-8")
+
+th <- theme_linedraw()+
+  theme(panel.grid.major.y = element_line(color = "gray"),
+        text = element_text(color = "gray20"),
+        axis.title.x = element_text(face="italic",size = 14),
+        axis.title.y = element_text(face="italic",size = 14),
+        axis.text = element_text(size=12,vjust = -1),
+        axis.text.x = element_text(angle=45),
+        legend.direction = "vertical",
+        legend.box = "vertical",
+        legend.text = element_text(size = 10),
+        legend.title = element_text(size = 11),
+        plot.caption = element_text(hjust=0),
+        plot.title = element_text(size = 16, face = "bold",hjust=0.39))
+```
+
+```{r}
+maxdf <- read_csv("../data/max_inf_coop_lfr.csv",col_names = F)
+totdf <- read_csv("../data/tot_inf_coop_lfr.csv",col_names = F)
+
+mu <- rep(seq(0.1,1,0.1),times=1, each=121)
+cop <- rep(seq(0.0,1,0.1),times=10, each=11)
+adap <- rep(seq(0.0,1,0.1),times=110,each=1)
+
+maxdf <- tibble(mu=mu,cop=cop,adap=adap,maxv=maxdf$X1)
+totdf <- tibble(mu=mu,cop=cop,adap=adap,totv=totdf$X1)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

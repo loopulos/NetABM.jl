@@ -86,7 +86,7 @@ global sumI = []
 
 mixing = 0.1
 @time let
-    for mixing in 0.1:0.1:1
+    for mixing in 0.0:0.1:1
         for copera in 0.0:0.1:1
             for adap in 0.0:0.1:1
                 global meantotI = Array{Float64}(undef,0)
@@ -97,14 +97,17 @@ mixing = 0.1
                 global Iall = Array{Array}(undef,0)
                 global Sall = Array{Array}(undef,0)
                 global Rall = Array{Array}(undef,0)
-                for a in 1:3
-                    get_network(N = num_agents, mu=mixing);
-                    the_root = pwd()
-                    the_net = readdlm(the_root*"/network.dat")
-                    true_com = readdlm(the_root*"/community.dat")
-                    true_com = Int64.(true_com)
-                    g, Nodes = lectura_uw(the_net)
-
+                for a in 1:10
+                    if mixing > 0
+                        get_network(N = num_agents, mu=mixing);
+                        the_root = pwd()
+                        the_net = readdlm(the_root*"/network.dat")
+                        true_com = readdlm(the_root*"/community.dat")
+                        true_com = Int64.(true_com)
+                        g, Nodes = lectura_uw(the_net)
+                    else
+                        g = erdos_renyi(num_agents, 0.3)
+                    end
                     agents = [Agent(i) for i = 1:num_agents];
                     init_demographics!(agents;states=["S","I"],initial=[1.0,0.0]);
                     pat_0 = rand(1:nv(g))
@@ -168,14 +171,14 @@ plt = heatmap(
     )
 xs = [string(i) for i = 0:0.1:1]
 ys = [string(i) for i = 0:0.1:1]
-z = reshape(maxI, (11, 11, 10))
+z = reshape(maxI, (11, 11, 11))
 z1 = z[:,:,1]
-z1 = z[:,:,5]
+z1 = z[:,:,2]
 plt = heatmap!(xs, ys, z1, aspect_ratio = 1, clim=(0,1), c = :algae,dpi=300)
 plt
 png(plt,"figs/heatmap_scaled_maximum_coop.png")
 savefig(plt,"figs/heatmap_scaled_maximum_coop.pdf")
-writedlm("data/max_inf_coop_lfr.csv",maxI)
+writedlm("data/max_inf_coop_lfr_er.csv",maxI)
 
 
 
@@ -194,5 +197,5 @@ plt = heatmap!(xs, ys, z, aspect_ratio = 1, clim=(0,1), c = :algae,dpi=300)
 plt
 png(plt,"figs/heatmap_scaled_total_coop.png")
 savefig(plt,"figs/heatmap_scaled_total_coop.pdf")
-writedlm("data/tot_inf_coop_lfr.csv",sumI)
+writedlm("data/tot_inf_coop_lfr_er.csv",sumI)
 
