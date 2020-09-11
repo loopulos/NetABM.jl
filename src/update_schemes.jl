@@ -9,12 +9,18 @@
 Finds agent's next state and updates it, it just packages
 `get_next_state!` and `update_state!`
 """
-function update_state!(ag)
+function update_single_state!(ag)
     push!(ag.previous, ag.state)
     if (ag.state == "S" && ag.new_state == "I")
         ag.counter = ag.counter + 1
     end
     ag.state = ag.new_state
+end
+
+function update_state!(agents)
+    Threads.@threads for ag in agents
+        update_single_state!(ag)
+    end
 end
 
 ##=================####==============##
