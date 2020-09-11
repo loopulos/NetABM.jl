@@ -174,10 +174,16 @@ function update_single_effect_distance_coop!(agents,g,d,threshold,step;v)
         current = findall(x->x==dist,distances)
         current_nodes = nodes[current]
         mean_effect = mean([x.coop_effect for x in agents[current_nodes]])
-        if agents[v].attitude == "ra"
-            agents[v].coop_effect = max(agents[v].coop_effect-mean_effect*step[dist+1],0)
-        elseif agents[v].attitude == "rt"
-            agents[v].coop_effect = min(agents[v].coop_effect+mean_effect*step[dist+1],1)
+        curr_effect = agents[v].coop_effect
+        the_diff = abs(curr_effect - mean_effect)
+        if rand() <= 1/dist
+            if agents[v].attitude == "ra"
+                #  agents[v].coop_effect = max(agents[v].coop_effect-mean_effect*step[dist],0)
+                agents[v].new_coop_effect = max(curr_effect-the_diff*step[dist],0)
+            elseif agents[v].attitude == "rt"
+                #  agents[v].coop_effect = min(agents[v].coop_effect+mean_effect*step[dist],1)
+                agents[v].new_coop_effect = min(curr_effect+the_diff*step[dist],1)
+            end
         end
     end
 end
@@ -214,7 +220,7 @@ function update_all_agents!(agents, params)
     Threads.@threads for ag_id in 1:params.num_agents
         get_next_state!(agents, ag_id, params)
     end
-    
+
     #  Threads.@threads for ag in agents
     #      get_next_state!(ag, now_t)
     #  end

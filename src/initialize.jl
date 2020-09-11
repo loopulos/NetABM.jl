@@ -159,6 +159,7 @@ function set_coop_agents!(agents; p_cop = 0.5)
             ag.at_home = true
             ag.attitude = "ra"
             ag.coop_effect = 1.0
+            ag.new_coop_effect = 1.0
         else
             ag.at_home = false
         end

@@ -59,6 +59,7 @@ mutable struct Agent
     p_cop       ::Float64
     attitude    ::String
     coop_effect ::Float64
+    new_coop_effect ::Float64
     at_home     ::Bool
     adapter     ::Bool
     # DEFAULT CONSTRUCTOR
@@ -79,6 +80,7 @@ mutable struct Agent
         0.0,
         1.0,
         "rt",
+        0.0,
         0.0,
         false,
         true,
