@@ -191,10 +191,14 @@ end
 ##=================####==============##
 
 function update_effect_given_distance_coop!(agents,g,d,threshold,step)
-    Threads.@threads for ag in agents
-        if ag.adapter
+    the_adaps = findall(x->x.adapter,agents)
+    Threads.@threads for ag in agents[the_adaps]
+        #  if ag.adapter
             update_single_effect_distance_coop!(agents,g,d,threshold,step;v=ag.id)
-        end
+        #  end
+    end
+    Threads.@threads for ag in agents[the_adaps]
+        ag.coop_effect = ag.new_coop_effect
     end
 end
 
