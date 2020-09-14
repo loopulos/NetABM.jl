@@ -5,7 +5,8 @@ using LightGraphs, Random, DelimitedFiles, StatsBase, SparseArrays, Distribution
 export lectura_uw, lfr_network, Agent, Params, get_coop, set_adapt_agents!, update_coop!, set_coop_effect!
 
 export init_demographics!,
-    get_coop!, next_state!, update_coop_infections!, update_coop_distance!
+    get_coop!, next_state!, update_coop_infections!, update_coop_distance!, update_effect_given_distance_coop!,
+    update_single_effect_distance_coop!
 
 export initialize_demographics!, set_fixed_coop_agents!, set_coop_agents!, SI_attitude!
 
