@@ -172,25 +172,35 @@ end
 
 ##=================####==============##
 
-function update_single_effect_distance_coop!(agents,g,d,threshold,step;v)
+function update_single_effect_distance_coop!(agents,g,d,threshold,steps;v)
     neigh = neighborhood_dists(g,v,d)
     nodes = first.(neigh)[2:end]
     distances = last.(neigh)[2:end]
+    #  agents[v].new_coop_effect = 0
+    curr_effect = agents[v].coop_effect
+    the_final = 0
     for dist in unique(distances)
         current = findall(x->x==dist,distances)
         current_nodes = nodes[current]
         mean_effect = mean([x.coop_effect for x in agents[current_nodes]])
-        curr_effect = agents[v].coop_effect
         the_diff = abs(curr_effect - mean_effect)
+        the_change = the_diff*steps[dist]
         if rand() <= 1/dist
             if agents[v].attitude == "ra"
+                the_final = curr_effect - the_change
                 #  agents[v].coop_effect = max(agents[v].coop_effect-mean_effect*step[dist],0)
-                agents[v].new_coop_effect = max(curr_effect-the_diff*step[dist],0)
+                #  agents[v].new_coop_effect = max(curr_effect-the_change,0)
             elseif agents[v].attitude == "rt"
+                the_final = curr_effect + the_change
                 #  agents[v].coop_effect = min(agents[v].coop_effect+mean_effect*step[dist],1)
-                agents[v].new_coop_effect = min(curr_effect+the_diff*step[dist],1)
+                #  agents[v].new_coop_effect = min(curr_effect+the_change,1)
             end
         end
+    end
+    if agents[v].attitude == "ra"
+        agents[v].new_coop_effect = max(the_final,0)
+    elseif agents[v].attitude == "rt"
+        agents[v].new_coop_effect = min(the_final,1)
     end
 end
 
@@ -199,9 +209,9 @@ end
 function update_effect_given_distance_coop!(agents,g,d,threshold,step)
     the_adaps = findall(x->x.adapter,agents)
     Threads.@threads for ag in agents[the_adaps]
-        #  if ag.adapter
+        if ag.adapter == true
             update_single_effect_distance_coop!(agents,g,d,threshold,step;v=ag.id)
-        #  end
+        end
     end
     Threads.@threads for ag in agents[the_adaps]
         ag.coop_effect = ag.new_coop_effect

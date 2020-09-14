@@ -181,6 +181,24 @@ function set_athome_agents!(agents)
         end
     end
 end
+##=================####==============##
+
+"""
+    set_coop_effect!(agents, μra,sdra,μrt,sdrt)
+    initial distribution of coop_effect
+"""
+function set_coop_effet!(agents, μra=1,sdra=0.1,μrt=0,sdrt=0.1)
+    Threads.@threads for ag in agents
+        if ag.attitude == "ra"
+            distribution = truncated(Normal(μra, sdra), 0, 1)
+            ag.coop_effect = rand(distribution)
+        elseif ag.attitude == "rt"
+            distribution = truncated(Normal(μrt, sdrt), 0, 1)
+            ag.coop_effect = rand(distribution)
+        end
+    end
+end
+
 
 ##=================####==============##
 
