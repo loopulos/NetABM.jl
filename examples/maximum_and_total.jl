@@ -1,6 +1,7 @@
 using Pkg
 #  If NetABM is not available then it should be installed via
 #  Uncomment if not installed
+#  using NetABM
 #  ] add https://github.com/ollin18/NetABM.jl
 
 function useit(list::Array{Symbol})
@@ -17,7 +18,7 @@ end
 thep = [:LightGraphs, :StatsBase, :Plots, :GraphPlot, :Statistics, :LaTeXStrings, :Bootstrap, :NetABM]
 useit(thep)
 
-global num_agents = 1000
+global num_agents = 100
 global n_boot = 1000
 global cil = 0.95
 global j
@@ -26,8 +27,8 @@ global maxI = Array{Float64}(undef,0)
 global sumI = []
 
 @time let
-    for copera in 0.0:0.1:1
-        for adap in 0.0:0.1:1
+    for copera in 0.0:0.5:1
+        for adap in 0.0:0.5:1
             global meantotI = Array{Float64}(undef,0)
             global Imean = Array{Float64}(undef,0)
             global Ilow = Array{Float64}(undef,0)
@@ -36,10 +37,13 @@ global sumI = []
             global Iall = Array{Array}(undef,0)
             global Sall = Array{Array}(undef,0)
             global Rall = Array{Array}(undef,0)
-            for a in 1:50#100
-                g = barabasi_albert(num_agents,3)
+            for a in 1:5#100
+                g = barabasi_albert(num_agents,4)
                 agents = [Agent(i) for i = 1:num_agents];
-                init_demographics!(agents;states=["S","I"],initial=[0.9,0.1]);
+                    init_demographics!(agents;states=["S","I"],initial=[1.0,0.0]);
+                    pat_0 = rand(1:nv(g))
+                    agents[pat_0].state = "I"
+                #  init_demographics!(agents;states=["S","I"],initial=[0.9,0.1]);
                 set_coop_agents!(agents;p_cop=copera);
                 set_adapt_agents!(agents;p_cop=adap);
                 map(x -> assign_contacts!(g,x), agents);
@@ -134,13 +138,17 @@ global num_agents = 100
 global n_boot = 1000
 global cil = 0.95
 global j
+#  global muladol = [(0,[0.1]), (1,repeat([0.1],2)),(2,repeat([0.1],3)),(3,repeat([0.1],4))]
+global muladol = [(i,repeat([0.5],i+1)) for i in 1:10]
+
 global adoptstep = (1,[0.1, 0.1])
 global maxI = Array{Float64}(undef,0)
 global sumI = []
 
 @time let
-    for copera in 0.0:0.1:1
-        for adap in 0.0:0.1:1
+    for adoptstep in muladol
+    for copera in 0.0:0.5:1
+        for adap in 0.0:0.5:1
             global meantotI = Array{Float64}(undef,0)
             global Imean = Array{Float64}(undef,0)
             global Ilow = Array{Float64}(undef,0)
@@ -149,8 +157,8 @@ global sumI = []
             global Iall = Array{Array}(undef,0)
             global Sall = Array{Array}(undef,0)
             global Rall = Array{Array}(undef,0)
-            for a in 1:100
-                g = barabasi_albert(num_agents,3)
+            for a in 1:5
+                g = barabasi_albert(num_agents,9)
                 agents = [Agent(i) for i = 1:num_agents];
                 init_demographics!(agents;states=["S","I"],initial=[1.0,0.0]);
                 pat_0 = rand(1:nv(g))
@@ -199,6 +207,7 @@ global sumI = []
         end
         GC.gc()
     end
+    end
 end
 
 theme(:default)
@@ -212,14 +221,16 @@ plt = heatmap(
         tickfontsize = 10,
         xlims = (0,11)
     )
-xs = [string(i) for i = 0:0.1:1]
-ys = [string(i) for i = 0:0.1:1]
-z = reshape(maxI, (11, 11))
-plt = heatmap!(xs, ys, z, aspect_ratio = 1, clim=(0,1), c = :algae,dpi=300)
+xs = [string(i) for i = 0:0.5:1]
+ys = [string(i) for i = 0:0.5:1]
+z = reshape(maxI, (11, 11, 11))
+z = reshape(maxI, (3,3,10))
+z1 = z[:,:,4]
+plt = heatmap!(xs, ys, z1, aspect_ratio = 1, clim=(0,1), c = :algae,dpi=300)
 plt
 png(plt,"figs/heatmap_scaled_maximum_coop.png")
 savefig(plt,"figs/heatmap_scaled_maximum_coop.pdf")
-writedlm("data/max_inf_coop.csv",maxI)
+writedlm("data/max_inf_coop_neigh.csv",maxI)
 
 
 
@@ -238,5 +249,5 @@ plt = heatmap!(xs, ys, z, aspect_ratio = 1, clim=(0,1), c = :algae,dpi=300)
 plt
 png(plt,"figs/heatmap_scaled_total_coop.png")
 savefig(plt,"figs/heatmap_scaled_total_coop.pdf")
-writedlm("data/tot_inf_coop.csv",sumI)
+writedlm("data/tot_inf_coop_neigh.csv",sumI)
 
