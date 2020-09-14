@@ -2,7 +2,7 @@ __precompile__()
 module NetABM
 using LightGraphs, Random, DelimitedFiles, StatsBase, SparseArrays, Distributions
 
-export lectura_uw, lfr_network, Agent, Params, get_coop, set_adapt_agents!, update_coop!
+export lectura_uw, lfr_network, Agent, Params, get_coop, set_adapt_agents!, update_coop!, set_coop_effect!
 
 export init_demographics!,
     get_coop!, next_state!, update_coop_infections!, update_coop_distance!

@@ -94,7 +94,7 @@ global sumI = []
                 #  init_demographics!(agents;states=["S","I"],initial=[0.9,0.1]);
                 set_coop_agents!(agents;p_cop=copera);
                 set_adapt_agents!(agents;p_cop=adap);
-                set_coop_effet!(agents)
+                set_coop_effect!(agents)
                 map(x -> assign_contacts!(g,x), agents);
                 num_S = []
                 num_I = []
