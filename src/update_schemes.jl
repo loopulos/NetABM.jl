@@ -206,11 +206,50 @@ end
 
 ##=================####==============##
 
+function update_single_effect_distance_coop_free_dir!(agents,g,d,threshold,steps;v)
+    neigh = neighborhood_dists(g,v,d)
+    nodes = first.(neigh)[2:end]
+    distances = last.(neigh)[2:end]
+    curr_effect = agents[v].coop_effect
+    the_final = 0
+    for dist in unique(distances)
+        current = findall(x->x==dist,distances)
+        current_nodes = nodes[current]
+        mean_effect = mean([x.coop_effect for x in agents[current_nodes]])
+        the_diff = (curr_effect - mean_effect)
+        the_change = the_diff*steps[dist]
+        if rand() <= 1/dist
+            the_final = curr_effect - the_change
+        end
+    end
+    if the_final > 1
+        the_final = 1
+    elseif the_final < 0
+        the_final = 0
+    end
+    agents[v].new_coop_effect = the_final
+end
+##=================####==============##
+
 function update_effect_given_distance_coop!(agents,g,d,threshold,step)
     the_adaps = findall(x->x.adapter,agents)
     Threads.@threads for ag in agents[the_adaps]
         if ag.adapter == true
             update_single_effect_distance_coop!(agents,g,d,threshold,step;v=ag.id)
+        end
+    end
+    Threads.@threads for ag in agents[the_adaps]
+        ag.coop_effect = ag.new_coop_effect
+    end
+end
+
+##=================####==============##
+
+function update_effect_given_distance_coop_free_dir!(agents,g,d,threshold,step)
+    the_adaps = findall(x->x.adapter,agents)
+    Threads.@threads for ag in agents[the_adaps]
+        if ag.adapter == true
+            update_single_effect_distance_coop_free_dir!(agents,g,d,threshold,step;v=ag.id)
         end
     end
     Threads.@threads for ag in agents[the_adaps]
