@@ -21,8 +21,11 @@ export update_all_agents!,
     get_populations,
     export_parameters,
     update_single_effect_distance!,
-    update_effect_given_distance!
-
+    update_effect_given_distance!,
+    update_single_effect_distance_coop!,
+    update_single_effect_distance_coop_free_dir!,
+    update_effect_given_distance_coop!,
+    update_effect_given_distance_coop_free_dir!
 
 """
     Agent(id, neighs, p_cop, state)
