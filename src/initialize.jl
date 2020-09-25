@@ -85,6 +85,7 @@ function init_demographics!(
     coop_dist = [0],
     meets_dist = [0],
     recovt_dist = [0],
+    belief_dist,
 )
     for ag in agents
         ag.state = sample(states, Weights(initial))
@@ -95,6 +96,7 @@ function init_demographics!(
         if ag.state == "I"
             ag.counter = ag.counter + 1
         end
+        ag.prior_bel = rand(belief_dist)
     end
 end
 
@@ -213,6 +215,20 @@ function set_adapt_agents!(agents; p_cop = 0.5)
         else
             ag.adapter = false
         end
+    end
+end
+
+##=================####==============##
+
+"""
+    set_adapt_sign_agents!(agents; distr)
+Set the probability at which the agent can change the directions of it's
+learning process.
+distr -> A truncated distribution between 0 and 1.
+"""
+function set_adapt_sign_agents!(agents; distr = truncated(Uniform(0,1)))
+    Threads.@threads for ag in agents
+        ag.prior_bel = rand(distr)
     end
 end
 

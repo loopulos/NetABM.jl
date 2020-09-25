@@ -2,7 +2,8 @@ __precompile__()
 module NetABM
 using LightGraphs, Random, DelimitedFiles, StatsBase, SparseArrays, Distributions
 
-export lectura_uw, lfr_network, Agent, Params, get_coop, set_adapt_agents!, update_coop!, set_coop_effect!
+export lectura_uw, lfr_network, Agent, Params, get_coop, set_adapt_agents!, update_coop!, set_coop_effect!,
+    set_adapt_sign_agents!
 
 export init_demographics!,
     get_coop!, next_state!, update_coop_infections!, update_coop_distance!
@@ -41,10 +42,11 @@ Agent definition for the simulations with parameters:
 `degree_t    ::Int64` -> Degree (Number of contacts) at time t
 `ϵ           ::Float64` -> Bound of confidence
 `p_cop       ::Float64 ` -> Cooperation probability
-attitude
-coop_effect
+`attitude    ::String ` -> Risk aversion vs risk tolerant behavior: RA, RT
+`coop_effect ::Float64 ` -> The mitigation efficacy of the complaince rules take by the agent
 `at_home     ::Bool ` -> Flag to represent Agent is at home
 `adapter     ::Bool ` -> Flag to represent Agent is willing to change behavior
+`prior_bel   ::Float64 ` -> The mean value of the direction change of adaptive behavior
 """
 mutable struct Agent
     id          ::Int64
@@ -67,6 +69,7 @@ mutable struct Agent
     new_coop_effect ::Float64
     at_home     ::Bool
     adapter     ::Bool
+    prior_bel   ::Float64
     # DEFAULT CONSTRUCTOR
     Agent(id) = new(
         id,
@@ -89,6 +92,7 @@ mutable struct Agent
         0.0,
         false,
         true,
+        5.0
     )
 end
 
