@@ -28,3 +28,10 @@ Manifest.toml
 
 # lfr files
 *.dat
+
+# images
+*.png
+*.pdf
+*.gif
+*.jpg
+*.jpeg
