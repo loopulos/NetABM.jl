@@ -16,7 +16,8 @@ export assign_contacts!,
     get_next_state!,
     update_state!,
     update_single_given_distance!,
-    update_coop_given_distance!
+    update_coop_given_distance!,
+    rand_sign
 
 export update_all_agents!,
     get_populations,
@@ -26,7 +27,11 @@ export update_all_agents!,
     update_single_effect_distance_coop!,
     update_single_effect_distance_coop_free_dir!,
     update_effect_given_distance_coop!,
-    update_effect_given_distance_coop_free_dir!
+    update_effect_given_distance_coop_free_dir!,
+    update_effect_given_distance_coop_prior!,
+    update_single_effect_distance_coop_prior!,
+    update_effect_given_distance_coop_stochastic!,
+    update_single_effect_distance_coop_stochastic!
 
 """
     Agent(id, neighs, p_cop, state)

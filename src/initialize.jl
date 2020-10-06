@@ -85,7 +85,7 @@ function init_demographics!(
     coop_dist = [0],
     meets_dist = [0],
     recovt_dist = [0],
-    belief_dist,
+    belief_dist = Uniform(1,0),
 )
     for ag in agents
         ag.state = sample(states, Weights(initial))
@@ -192,10 +192,10 @@ end
 function set_coop_effect!(agents, μra=1,sdra=0.1,μrt=0,sdrt=0.1)
     Threads.@threads for ag in agents
         if ag.attitude == "ra"
-            distribution = truncated(Normal(μra, sdra), 0, 1)
+            distribution = truncated(Normal(μra, sdra), 0.5, 1)
             ag.coop_effect = rand(distribution)
         elseif ag.attitude == "rt"
-            distribution = truncated(Normal(μrt, sdrt), 0, 1)
+            distribution = truncated(Normal(μrt, sdrt), 0, 0.5)
             ag.coop_effect = rand(distribution)
         end
     end
@@ -226,7 +226,7 @@ Set the probability at which the agent can change the directions of it's
 learning process.
 distr -> A truncated distribution between 0 and 1.
 """
-function set_adapt_sign_agents!(agents; distr = truncated(Uniform(0,1)))
+function set_adapt_sign_agents!(agents; distr = Uniform(0,1))
     Threads.@threads for ag in agents
         ag.prior_bel = rand(distr)
     end
@@ -253,3 +253,11 @@ function get_coop!(agents)
 end
 
 ##=================####==============##
+
+function rand_sign(number)
+    s = 1
+    if number < 0.5
+        s = -1
+    end
+    s
+end
