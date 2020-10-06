@@ -35,3 +35,10 @@ Manifest.toml
 *.gif
 *.jpg
 *.jpeg
+
+# data
+*.csv
+*.tsv
+
+# Notebook checkpoints
+examples/.ipynb_checkpoints/
