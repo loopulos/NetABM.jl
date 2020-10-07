@@ -43,7 +43,7 @@ of agents in each state. Might be:
     - Q: Quarantained (not implemented)
     - D: Decesead (not implemented)
 """
-function get_populations_old(agents)
+function get_populations(agents)
     map(x -> x.state, agents) |> countmap
 end
 
