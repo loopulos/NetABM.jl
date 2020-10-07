@@ -13,7 +13,7 @@ Get number of agents in each state:
     - Q: Quarantained (not implemented)
     - D: Decesead (not implemented)
 """
-function get_populations(agents, params)
+function get_populations_old(agents, params)
     # species = num_S, num_I, num_R, num_Q
     species = zeros(4)
 
@@ -31,6 +31,23 @@ function get_populations(agents, params)
     #  return species ./ params.num_agents
     return species
 end
+##=================####==============##
+
+"""
+    get_populations(agents)
+It returns a dictionary with the number
+of agents in each state. Might be:
+    - S: Suceptible
+    - I: Infected
+    - R: Recovered
+    - Q: Quarantained (not implemented)
+    - D: Decesead (not implemented)
+"""
+function get_populations_old(agents)
+    map(x -> x.state, agents) |> countmap
+end
+
+
 ##=================####==============##
 
 """
