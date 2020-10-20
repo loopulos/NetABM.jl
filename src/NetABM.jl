@@ -32,6 +32,8 @@ export update_all_agents!,
     update_single_effect_distance_coop_prior!,
     update_effect_given_distance_coop_stochastic!,
     update_single_effect_distance_coop_stochastic!
+    update_effect_given_distance_coop_alpha!,
+    update_single_effect_distance_coop_alpha!
 
 """
     Agent(id, neighs, p_cop, state)
