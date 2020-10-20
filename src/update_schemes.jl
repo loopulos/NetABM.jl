@@ -101,7 +101,6 @@ function update_single_effect_distance_coop_prior!(agents,g,d,threshold,steps,sd
         the_diff = abs(curr_effect - mean_effect)
         the_change = the_diff*steps[dist]
         the_sign = rand(di) |> rand_sign
-#         the_sign = rand() |> rand_sign
         if rand() <= 1/dist
             if agents[v].attitude == "ra"
                 the_final = curr_effect - (the_change * the_sign)
@@ -116,7 +115,6 @@ function update_single_effect_distance_coop_prior!(agents,g,d,threshold,steps,sd
         the_final = 0
     end
     agents[v].new_coop_effect = the_final
-
 end
 
 ##=================####==============##
@@ -379,5 +377,56 @@ function update_all_agents!(agents, params)
         update_state!(ag)
     end
 end
+
+##=================####==============##
+
+function update_single_effect_distance_alpha!(agents,g,d,threshold,steps,sd_change,sd_alpha;v)
+    neigh = neighborhood_dists(g,v,d)
+    nodes = first.(neigh)[2:end]
+    distances = last.(neigh)[2:end]
+    curr_effect = agents[v].coop_effect
+    the_final = 0
+    di = truncated(Normal(agents[v].prior_bel,sd_change),0,1)
+    for dist in unique(distances)
+        current = findall(x->x==dist,distances)
+        current_nodes = nodes[current]
+        mean_effect = mean([x.coop_effect for x in agents[current_nodes]])
+        the_diff = abs(curr_effect - mean_effect)
+        if agents[v].attitude == "ra"
+            side = -1
+        elseif agents[v].attitude == "rt"
+            side = 1
+        end
+        dialpha = truncated(Normal(steps[dist]*side,sd_change),-1,1)
+        the_change = the_diff*rand(dialpha)
+        the_sign = rand(di) |> rand_sign
+        if rand() <= 1/dist
+            the_final = curr_effect + (the_change * the_sign)
+        end
+    end
+    if the_final > 1
+        the_final = 1
+    elseif the_final < 0
+        the_final = 0
+    end
+    agents[v].new_coop_effect = the_final
+
+end
+
+##=================####==============##
+
+function update_effect_given_distance_coop_alpha!(agents,g,d,threshold,step,sd_change,sd_alpha)
+    the_adaps = findall(x->x.adapter,agents)
+    Threads.@threads for ag in agents[the_adaps]
+        if ag.adapter == true
+            update_single_effect_distance_alpha!(agents,g,d,threshold,step,sd_change,sd_alpha;v=ag.id)
+        end
+    end
+    Threads.@threads for ag in agents[the_adaps]
+        ag.coop_effect = ag.new_coop_effect
+    end
+end
+
+##=================####==============##
 
 ##=================####==============##
