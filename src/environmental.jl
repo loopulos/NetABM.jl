@@ -85,22 +85,20 @@ function SI_attitude!(agent, agents;inf_prob=0.3, rec_prob=0.03, R=false)
         infec = [ag.coop_effect for ag in agents[agent.contacts_t] if ag.state == "I"]
         the_odds = @. inf_prob * (1-agent.coop_effect) * (1-infec)
         odds = the_odds |> f -> map(x -> sample([true,false], Weights([x,1-x])),f) |> sum
-        dis = truncated(Normal(7,5),1,Inf)
         if odds > 0
             agent.new_state = "I"
-            agent.days = Int(ceil(rand(dis)))
         else
             agent.new_state = "S"
         end
     elseif agent.state == "I"
         if !R
-            if agent.days <= ag.counter
+            if agent.counter >= agent.recovery_t
                 agent.new_state = "S"
             else
                 agent.new_state = "I"
             end
         else
-            if agent.days <= agent.counter
+            if agent.counter >= agent.recovery_t
                 agent.new_state = "R"
             else
                 agent.new_state = "I"

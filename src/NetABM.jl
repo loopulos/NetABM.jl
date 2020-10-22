@@ -60,7 +60,6 @@ mutable struct Agent
     id          ::Int64
     state       ::String
     new_state   ::String
-    days        ::Int64
     previous    ::Array{String}
     num_meets   ::Int64
     recovery_t  ::Int64
@@ -84,7 +83,6 @@ mutable struct Agent
         id,
         "S",
         "S",
-        0,
         Vector{String}(),
         1,
         5,

@@ -84,7 +84,7 @@ function init_demographics!(
     initial::Array{Float64} = [0.5, 0.5],
     coop_dist = [0],
     meets_dist = [0],
-    recovt_dist = [0],
+    recovt_dist = truncated(Normal(7,5),1,Inf),
     belief_dist = Uniform(0,1),
 )
     for ag in agents
@@ -92,7 +92,7 @@ function init_demographics!(
         push!(ag.previous, ag.state)
         ag.p_cop = rand(coop_dist)
         ag.num_meets = 1 + rand(meets_dist)
-        ag.recovery_t = ceil(rand(recovt_dist))
+        ag.recovery_t = Int(ceil(rand(recovt_dist)))
         if ag.state == "I"
             ag.counter = ag.counter + 1
         end
