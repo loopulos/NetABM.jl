@@ -100,7 +100,7 @@ function SI_attitude!(agent, agents;inf_prob=0.3, rec_prob=0.03, R=false)
                 agent.new_state = "I"
             end
         else
-            if agent.days <= ag.counter
+            if agent.days <= agent.counter
                 agent.new_state = "R"
             else
                 agent.new_state = "I"
