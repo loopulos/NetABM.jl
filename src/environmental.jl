@@ -47,15 +47,16 @@ function SI_coop!(agent, agents;inf_prob=0.1, rec_prob=0.3, coop_red=0.7, R=fals
 end
 
 ##=================####==============##
-
-function SI_attitude!(agent, agents;inf_prob=0.1, rec_prob=0.3, R=false)
+function SI_attitude_old!(agent, agents;inf_prob=0.1, rec_prob=0.3, R=false)
     #  sus = findall(x -> x.state == "S",agents)
     if agent.state == "S"
         infec = [ag.coop_effect for ag in agents[agent.contacts_t] if ag.state == "I"]
         the_odds = @. inf_prob * (1-agent.coop_effect) * (1-infec)
         odds = the_odds |> f -> map(x -> sample([true,false], Weights([x,1-x])),f) |> sum
+        dis = truncated(Normal(7,5),1,Inf)
         if odds > 0
             agent.new_state = "I"
+            agent.days = Int(ceil(rand(dis)))
         else
             agent.new_state = "S"
         end
@@ -68,6 +69,38 @@ function SI_attitude!(agent, agents;inf_prob=0.1, rec_prob=0.3, R=false)
             end
         else
             if rand() <= rec_prob
+                agent.new_state = "R"
+            else
+                agent.new_state = "I"
+            end
+        end
+    end
+end
+
+##=================####==============##
+
+function SI_attitude!(agent, agents;inf_prob=0.3, rec_prob=0.03, R=false)
+    #  sus = findall(x -> x.state == "S",agents)
+    if agent.state == "S"
+        infec = [ag.coop_effect for ag in agents[agent.contacts_t] if ag.state == "I"]
+        the_odds = @. inf_prob * (1-agent.coop_effect) * (1-infec)
+        odds = the_odds |> f -> map(x -> sample([true,false], Weights([x,1-x])),f) |> sum
+        dis = truncated(Normal(7,5),1,Inf)
+        if odds > 0
+            agent.new_state = "I"
+            agent.days = Int(ceil(rand(dis)))
+        else
+            agent.new_state = "S"
+        end
+    elseif agent.state == "I"
+        if !R
+            if agent.days <= ag.counter
+                agent.new_state = "S"
+            else
+                agent.new_state = "I"
+            end
+        else
+            if agent.days <= ag.counter
                 agent.new_state = "R"
             else
                 agent.new_state = "I"

@@ -11,7 +11,8 @@ Finds agent's next state and updates it, it just packages
 """
 function update_single_state!(ag)
     push!(ag.previous, ag.state)
-    if (ag.state == "S" && ag.new_state == "I")
+    #  if (ag.state == "S" && ag.new_state == "I")
+    if ag.new_state == "I"
         ag.counter = ag.counter + 1
     end
     ag.state = ag.new_state

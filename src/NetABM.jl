@@ -40,6 +40,7 @@ export update_all_agents!,
 Agent definition for the simulations with parameters:
 `id          ::Int64 ` -> ID
 `state       ::String ` -> Infection state (S, I, R)
+`days        ::Int64 ` -> Days the agent will remain infected
 `new_state   ::String ` -> Agent's state after meetings
 `num_meets   ::Int64 ` -> Number of meetings in a time step
 `recovery_t  ::Int64 ` -> Recovery time
@@ -58,6 +59,7 @@ Agent definition for the simulations with parameters:
 mutable struct Agent
     id          ::Int64
     state       ::String
+    days        ::Int64
     new_state   ::String
     previous    ::Array{String}
     num_meets   ::Int64
@@ -80,6 +82,7 @@ mutable struct Agent
     # DEFAULT CONSTRUCTOR
     Agent(id) = new(
         id,
+        0,
         "S",
         "S",
         Vector{String}(),
