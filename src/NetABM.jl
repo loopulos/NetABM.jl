@@ -59,8 +59,8 @@ Agent definition for the simulations with parameters:
 mutable struct Agent
     id          ::Int64
     state       ::String
-    days        ::Int64
     new_state   ::String
+    days        ::Int64
     previous    ::Array{String}
     num_meets   ::Int64
     recovery_t  ::Int64
@@ -82,9 +82,9 @@ mutable struct Agent
     # DEFAULT CONSTRUCTOR
     Agent(id) = new(
         id,
+        "S",
+        "S",
         0,
-        "S",
-        "S",
         Vector{String}(),
         1,
         5,
