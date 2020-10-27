@@ -410,8 +410,11 @@ function update_single_effect_distance_alpha!(agents,g,d,threshold,steps,sd_chan
     elseif the_final < 0
         the_final = 0
     end
-    agents[v].new_coop_effect = the_final
-
+    if the_final != agents[v].coop_effect
+        agents[v].new_coop_effect = the_final
+    else
+        agents[v].new_coop_effect = agents[v].coop_effect
+    end
 end
 
 ##=================####==============##
@@ -430,4 +433,42 @@ end
 
 ##=================####==============##
 
+function risk_assessment!(agents, g, d; v)
+    neigh = neighborhood_dists(g,v,d)
+    nodes = last.(neigh)[2:end]
+    distances = last.(neigh)[2:end]
+    curr_effect = agents[v].coop_effect
+    the_final = 0
+    for dist in unique(distances)
+        current = findall(x->x==dist, distances)
+        current_nodes = nodes[current]
+        populations = get_populations(agents[current_nodes]);
+        I = get(populations,"I",0)
+        if I > 0
+            the_final = curr_effect + (1/dist)*(I/length(current))*0.01#(length(current)/nv(g))
+        else
+            the_final = curr_effect - (1/dist)*(length(current)/length(nodes))*0.01#(length(current)/nv(g))
+        end
+    end
+    if the_final > 1
+        the_final = 1
+    elseif the_final < 0
+        the_final = 0
+    end
+    if the_final != agents[v].coop_effect
+        agents[v].new_coop_effect = the_final
+    else
+        agents[v].new_coop_effect = agents[v].coop_effect
+    end
+end
+
 ##=================####==============##
+
+function update_risk_assessment!(agents,g,d)
+    Threads.@threads for ag in agents#[the_adaps]
+        risk_assessment(agents, g, d; v=ag.id)
+    end
+    Threads.@threads for ag in agents#[the_adaps]
+        ag.coop_effect = ag.new_coop_effect
+    end
+end
