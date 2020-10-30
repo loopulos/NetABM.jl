@@ -514,6 +514,68 @@ function risk_up!(agents, g, d; v)
     end
 end
 
+##=================####==============##
+
+function update_single_neighbors!(agents,g,d,threshold,steps,sd_change,sd_alpha;v)
+    neigh = neighborhood_dists(g,v,d)
+    nodes = first.(neigh)[2:end]
+    distances = last.(neigh)[2:end]
+    curr_effect = agents[v].coop_effect
+    curr_bel = agents[v].prior_bel
+    the_final = 0
+    final_bel = 0
+    di = truncated(Normal(agents[v].prior_bel,sd_change),0,1)
+    for dist in unique(distances)
+        current = findall(x->x==dist,distances)
+        current_nodes = nodes[current]
+        mean_effect = mean([x.coop_effect for x in agents[current_nodes]])
+        the_diff = abs(curr_effect - mean_effect)
+        populations = get_populations(agents[current_nodes]);
+        I = get(populations,"I",0)
+        if agents[v].attitude == "ra"
+            side = -1
+        elseif agents[v].attitude == "rt"
+            side = 1
+        end
+        if I > 0
+            final_bel = curr_bel + (steps[dist])*(I/length(current))
+        else
+            final_bel = curr_bel - (steps[dist])*(1/length(current))
+        end
+        dialpha = truncated(Normal(steps[dist]*side,sd_change),-1,1)
+        the_change = the_diff*rand(dialpha)
+        the_sign = rand(di) |> rand_sign
+        if rand() <= 1/dist
+            the_final = curr_effect + (the_change * the_sign)
+        end
+    end
+    if the_final > 1
+        the_final = 1
+    elseif the_final < 0
+        the_final = 0
+    end
+    if final_bel > 1
+        final_bel = 1
+    elseif final_bel < 0
+        final_bel = 0
+    end
+    agents[v].new_coop_effect = the_final
+    agents[v].prior_bel = final_bel
+end
+
+##=================####==============##
+
+function update_all_neighbors!(agents,g,d,threshold,step,sd_change,sd_alpha)
+    the_adaps = findall(x->x.adapter,agents)
+    Threads.@threads for ag in agents[the_adaps]
+        if ag.adapter == true
+            update_single_effect_distance_alpha!(agents,g,d,threshold,step,sd_change,sd_alpha;v=ag.id)
+        end
+    end
+    Threads.@threads for ag in agents[the_adaps]
+        ag.coop_effect = ag.new_coop_effect
+    end
+end
 
 
 
