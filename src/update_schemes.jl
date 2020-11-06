@@ -580,7 +580,7 @@ end
 
 ##=================####==============##
 
-function risk_assessment!(agents, g, d, risk; v)
+function risk_assessment!(agents, g, d, risk, sd_risk; v)
     neigh = neighborhood_dists(g,v,d)
     nodes = last.(neigh)[2:end]
     distances = last.(neigh)[2:end]
@@ -592,7 +592,7 @@ function risk_assessment!(agents, g, d, risk; v)
         populations = get_populations(agents[current_nodes]);
         I = get(populations,"I",0)
         num = risk*(1/dist)*(I/length(current))
-        di = truncated(Normal(num,0.2),-1,1)
+        di = truncated(Normal(num,sd_risk),-1,1)
         the_final = the_final + rand(di)
     end
     if the_final > 1
@@ -609,7 +609,7 @@ end
 
 ##=================####==============##
 
-function update_effect_given_distance_coop_alpha_risk!(agents,g,d,threshold,step,sd_change,sd_alpha,risk)
+function update_effect_given_distance_coop_alpha_risk!(agents,g,d,threshold,step,sd_change,sd_alpha,risk, sd_risk)
     the_adaps = findall(x->x.adapter,agents)
     Threads.@threads for ag in agents[the_adaps]
         if ag.adapter == true
