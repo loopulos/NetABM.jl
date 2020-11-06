@@ -618,7 +618,7 @@ function update_effect_given_distance_coop_alpha_risk!(agents,g,d,threshold,step
     end
     Threads.@threads for ag in agents[the_adaps]
         if ag.adapter == true
-            risk_assessment!(agents,g,d, risk;v=ag.id)
+            risk_assessment!(agents,g,d, risk, sd_risk;v=ag.id)
         end
     end
     Threads.@threads for ag in agents[the_adaps]
